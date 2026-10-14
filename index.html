@@ -54,10 +54,10 @@
   .banner{background:#fff4e0;color:#7a4b00;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
   .banner button{border:0;background:#e69500;color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;white-space:nowrap}
   .wrap{max-width:860px;margin:0 auto;padding:12px 16px 40px}
-  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
   .k{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer}
-  .k b{display:block;font-size:24px;line-height:1.1}
-  .k span{font-size:12px;color:var(--mute)}
+  .k b{display:block;font-size:22px;line-height:1.1}
+  .k span{font-size:11.5px;color:var(--mute);display:block;line-height:1.25;margin-top:2px}
   .k.red b{color:var(--red)} .k.amb b{color:var(--amb)}
   .k.on{outline:2px solid var(--pri)}
   .tabs{display:flex;gap:6px;margin-bottom:10px}
@@ -65,7 +65,14 @@
   .tab.on{background:var(--pri);color:#fff;border-color:var(--pri)}
   .tools{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tools input,.tools select{flex:1;min-width:140px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
-  .item{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .item{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;position:relative}
+  .item:active{filter:brightness(.97)}
+  .item .mo{position:absolute;right:12px;bottom:10px;color:var(--pri);font-size:12px;font-weight:600}
+  .ct{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+  .ct td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  .ct td:first-child{color:var(--mute);width:38%;padding-right:10px}
+  .ct td:last-child{white-space:pre-wrap;word-break:break-word}
+  #mdCT .sheet{max-height:88vh;overflow:auto}
   .item.tre{border-left-color:var(--red);background:var(--redbg)}
   .item.sap{border-left-color:#e69500;background:var(--ambbg)}
   .row1{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
@@ -133,6 +140,7 @@
     <div class="banner hide" id="bnDoiMK"><span>Bạn đang dùng mật khẩu được cấp. Nên đổi sang mật khẩu của riêng bạn.</span><button onclick="moDoiMK()">Đổi ngay</button></div>
     <div class="kpi">
       <div class="k" id="kTon" onclick="chon('TON','')"><b>0</b><span>Vụ chưa xử lý</span></div>
+      <div class="k red" id="kTonTre" onclick="chon('TON','tre')"><b>0</b><span id="lbTonTre">Tồn &gt; 5 ngày</span></div>
       <div class="k red" id="kTre" onclick="chon('BB','tre')"><b>0</b><span>BB trễ hạn</span></div>
       <div class="k amb" id="kSap" onclick="chon('BB','sap')"><b>0</b><span>BB sắp trễ</span></div>
     </div>
@@ -160,6 +168,17 @@
     <div class="msg" id="mDoi"></div>
     <button class="btn" id="bDoi" onclick="doiMK()">Lưu mật khẩu mới</button>
     <button class="btn btn2" onclick="dong('mdDoi')">Đóng</button>
+  </div>
+</div>
+
+<!-- ============ CHI TIẾT TICKET ============ -->
+<div class="modal hide" id="mdCT" onclick="if(event.target===this)dong('mdCT')">
+  <div class="sheet">
+    <h3 id="ctTieuDe">Ticket</h3>
+    <div class="meta" id="ctPhu"></div>
+    <table class="ct" id="ctBang"></table>
+    <div class="meta" id="ctTb" style="margin-top:10px"></div>
+    <button class="btn btn2" onclick="dong('mdCT')">Đóng</button>
   </div>
 </div>
 
@@ -275,7 +294,8 @@ function nhanDuLieu(d) {
   DATA = d; vt = d.user.vaiTro; pv = d.user.phamVi || [d.user.nhom];
   $('ten').textContent = d.user.ten;
   $('sub').textContent = vt === 'ADMIN' ? 'Toàn khu vực Nam' : (vt === 'TRUONG_NHOM' ? 'Phụ trách: ' + pv.join(', ') : d.user.nhom);
-  $('foot').textContent = 'Dữ liệu cập nhật: ' + (d.capNhatLuc || 'chưa rõ') + ' · BB trễ khi quá ' + d.han + ' ngày kể từ Resolved';
+  $('foot').textContent = 'Dữ liệu cập nhật: ' + (d.capNhatLuc || 'chưa rõ') + ' · Vụ tồn đỏ khi quá ' + (d.hanTon || 5) + ' ngày · BB trễ khi quá ' + d.han + ' ngày kể từ Resolved';
+  $('lbTonTre').textContent = 'Tồn > ' + (d.hanTon || 5) + ' ngày';
   $('bnDoiMK').classList.toggle('hide', !d.canDoiMK);
   const nhieuNhom = vt === 'ADMIN' || pv.length > 1;
   $('fNhom').classList.toggle('hide', !nhieuNhom);
@@ -303,13 +323,15 @@ function ve() {
   const base = DATA.items.filter(x => (!n || x.nhom === n) && (!c || x.cbkt === c));
   const bb = base.filter(x => x.loai === 'BB'), ton = base.filter(x => x.loai === 'TON');
   $('kTon').querySelector('b').textContent = ton.length;
+  $('kTonTre').querySelector('b').textContent = ton.filter(x => x.tre).length;
   $('kTre').querySelector('b').textContent = bb.filter(x => x.tre).length;
   $('kSap').querySelector('b').textContent = bb.filter(x => x.sapTre).length;
   $('tTON').textContent = 'Chưa xử lý (' + ton.length + ')';
   $('tBB').textContent = 'BB chưa thu hồi (' + bb.length + ')';
   $('tTON').classList.toggle('on', tab === 'TON');
   $('tBB').classList.toggle('on', tab === 'BB');
-  $('kTon').classList.toggle('on', tab === 'TON');
+  $('kTon').classList.toggle('on', tab === 'TON' && loc === '');
+  $('kTonTre').classList.toggle('on', tab === 'TON' && loc === 'tre');
   $('kTre').classList.toggle('on', tab === 'BB' && loc === 'tre');
   $('kSap').classList.toggle('on', tab === 'BB' && loc === 'sap');
 
@@ -322,18 +344,50 @@ function ve() {
   const hienTen = vt !== 'CBKT', hienNhom = vt === 'ADMIN' || pv.length > 1;
   $('list').innerHTML = ds.map(x => {
     const cls = x.tre ? 'tre' : (x.sapTre ? 'sap' : '');
+    // số ngày luôn tính từ mốc: BB tính từ ngày Resolved, vụ tồn tính từ ngày tạo
     const nhan = x.soNgay == null ? '' : (x.loai === 'BB'
-      ? (x.tre ? 'Trễ ' + (x.soNgay - DATA.han) + ' ngày' : x.soNgay + ' ngày')
+      ? (x.tre ? 'Trễ ' + x.soNgay + ' ngày' : x.soNgay + ' ngày')
       : 'Tồn ' + x.soNgay + ' ngày');
-    return '<div class="item ' + cls + '">' +
+    return '<div class="item ' + cls + '" onclick="moChiTiet(\'' + esc(x.ticket).replace(/'/g, '') + '\')">' +
       '<div class="row1"><div class="tk">' + esc(x.ticket) + '</div>' + (nhan ? '<span class="badge">' + nhan + '</span>' : '') + '</div>' +
       '<div class="meta">' + [x.nganHang, x.atmId ? 'ATM ' + x.atmId : ''].filter(Boolean).map(esc).join(' · ') + '</div>' +
       (x.diaChi ? '<div class="meta">' + esc(x.diaChi) + '</div>' : '') +
       (x.moTa ? '<div class="mota">' + esc(x.moTa) + '</div>' : '') +
       '<div class="meta">' + (x.loai === 'BB' ? 'Resolved: ' : 'Tạo: ') + esc(x.ngayHienThi) + (x.trangThai ? ' · ' + esc(x.trangThai) : '') + '</div>' +
       (hienTen ? '<div class="who">' + esc(x.cbkt) + (hienNhom ? ' · ' + esc(x.nhom) : '') + '</div>' : '') +
-      '</div>';
+      '<span class="mo">Chi tiết ›</span></div>';
   }).join('');
+}
+
+/* ---------- chi tiết ticket ---------- */
+const CT_NHAN = [['KhachHang', 'Khách hàng'], ['ChiNhanh', 'Chi nhánh'], ['ATMID', 'ATM ID'], ['LoaiMay', 'Loại máy'],
+  ['DiaChiDatMay', 'Địa chỉ đặt máy'], ['LoaiHinhVuViec', 'Loại hình vụ việc'], ['SuCo', 'Sự cố'], ['GiaiPhap', 'Giải pháp'],
+  ['LinhKienThayThe', 'Linh kiện thay thế'], ['zOpenDate', 'zOpenDate'], ['zCloseDate', 'zCloseDate']];
+const ctCache = {};
+function bangCT(rows) {
+  $('ctBang').innerHTML = rows.filter(r => r[1] !== undefined).map(r =>
+    '<tr><td>' + esc(r[0]) + '</td><td>' + (r[1] === '' ? '<span style="color:#aab">–</span>' : esc(r[1])) + '</td></tr>').join('');
+}
+function moChiTiet(ticket) {
+  const x = DATA.items.find(i => i.ticket === ticket);
+  if (!x) return;
+  $('ctTieuDe').textContent = 'Ticket ' + ticket;
+  $('ctPhu').textContent = (x.loai === 'BB' ? 'BB chưa thu hồi' : 'Chưa xử lý') + ' · ' + x.trangThai + (x.soNgay != null ? ' · ' + x.soNgay + ' ngày' : '') + ' · ' + x.cbkt;
+  // hiện ngay thông tin sẵn có từ Service Desk
+  const coBan = [['Hợp đồng', x.nganHang], ['ATM ID', x.atmId], ['Nội dung', x.moTa], [x.loai === 'BB' ? 'Resolved' : 'Ngày tạo', x.ngayHienThi]];
+  bangCT(coBan);
+  $('ctTb').textContent = 'Đang tải chi tiết...';
+  $('mdCT').classList.remove('hide');
+  const hien = r => {
+    if (r.hetPhien) { dong('mdCT'); moLogin('Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.'); return; }
+    if (!r.ok) { $('ctTb').textContent = r.loi || 'Không tải được chi tiết'; return; }
+    if (!r.coChiTiet) { $('ctTb').textContent = 'Chưa có chi tiết của ticket này trong báo cáo 24.'; return; }
+    ctCache[ticket] = r;
+    bangCT([['Hợp đồng', x.nganHang]].concat(CT_NHAN.map(n => [n[1], r[n[0]]])));
+    $('ctTb').textContent = '';
+  };
+  if (ctCache[ticket]) return hien(ctCache[ticket]);
+  goi('layChiTiet', [TOKEN, ticket], hien, () => { $('ctTb').textContent = 'Lỗi kết nối, thử lại sau.'; });
 }
 
 /* ---------- cài app (chỉ khi chạy dạng PWA) ---------- */
