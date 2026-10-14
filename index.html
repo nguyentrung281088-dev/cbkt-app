@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>CBKT App</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b5cad">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CBKT App">
+<script>
+  // Địa chỉ máy chủ (Google Apps Script web app). Đổi URL thì sửa dòng này.
+  window.API_URL = "https://script.google.com/macros/s/AKfycbyUJRGvcgPNRiUKuFS-SflenIV16fw8qR3KJNTnf59h_Z1d0sSKwOf5UvBTaqxlGL3d/exec";
+</script>
+<style>
+  :root{--bg:#f3f5f8;--card:#fff;--ink:#1c2430;--mute:#6b7685;--line:#e3e7ee;--pri:#0b5cad;--pri2:#084a8c;
+        --red:#c62828;--redbg:#fdecec;--amb:#a15c00;--ambbg:#fff4e0;--ok:#2e7d32}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+  .hide{display:none!important}
+  button{font:inherit;cursor:pointer}
+  /* ---------- đăng nhập ---------- */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;
+         background:linear-gradient(160deg,var(--pri) 0%,var(--pri2) 55%,#062f5a 100%)}
+  .lbox{width:100%;max-width:360px;background:#fff;border-radius:16px;padding:28px 22px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .logo{width:56px;height:56px;border-radius:14px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;
+        font-weight:800;font-size:20px;margin:0 auto 10px;letter-spacing:.5px}
+  .lbox h2{margin:0;text-align:center;font-size:20px}
+  .lbox .muted{text-align:center;color:var(--mute);font-size:13px;margin:4px 0 20px}
+  label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+  .inp{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
+  .inp:focus{outline:2px solid var(--pri);border-color:transparent}
+  .pw{position:relative}
+  .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mute);font-size:13px;padding:6px}
+  .btn{width:100%;margin-top:18px;padding:12px;border:0;border-radius:10px;background:var(--pri);color:#fff;font-weight:700;font-size:16px}
+  .btn:disabled{opacity:.6}
+  .btn2{background:#eef1f5;color:var(--ink)}
+  .link{display:block;text-align:center;margin-top:14px;color:var(--pri);font-size:14px;background:none;border:0;width:100%}
+  .msg{margin-top:12px;font-size:14px;padding:10px;border-radius:8px;display:none}
+  .msg.err{display:block;background:var(--redbg);color:var(--red)}
+  .msg.ok{display:block;background:#e8f5e9;color:var(--ok)}
+  /* ---------- app ---------- */
+  header{background:var(--pri);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;position:sticky;top:0;z-index:5}
+  .hrow{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:860px;margin:0 auto}
+  header h1{margin:0;font-size:17px}
+  header .sub{opacity:.85;font-size:12px;margin-top:1px}
+  .ibtn{border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:7px 10px;font-size:13px;white-space:nowrap}
+  .menu{position:absolute;right:16px;top:52px;background:#fff;color:var(--ink);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden;min-width:190px}
+  .menu button{display:block;width:100%;text-align:left;border:0;background:#fff;padding:12px 14px;font-size:14px}
+  .menu button:active{background:#f0f3f7}
+  .banner{background:#fff4e0;color:#7a4b00;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .banner button{border:0;background:#e69500;color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;white-space:nowrap}
+  .wrap{max-width:860px;margin:0 auto;padding:12px 16px 40px}
+  .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .k{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer}
+  .k b{display:block;font-size:24px;line-height:1.1}
+  .k span{font-size:12px;color:var(--mute)}
+  .k.red b{color:var(--red)} .k.amb b{color:var(--amb)}
+  .k.on{outline:2px solid var(--pri)}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{flex:1;padding:9px 6px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-weight:600;color:var(--mute);font-size:14px}
+  .tab.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .tools{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tools input,.tools select{flex:1;min-width:140px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
+  .item{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .item.tre{border-left-color:var(--red);background:var(--redbg)}
+  .item.sap{border-left-color:#e69500;background:var(--ambbg)}
+  .row1{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .tk{font-weight:700;word-break:break-all}
+  .badge{white-space:nowrap;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;background:#eef1f5;color:var(--ink)}
+  .tre .badge{background:var(--red);color:#fff} .sap .badge{background:#e69500;color:#fff}
+  .meta{color:var(--mute);font-size:13px;margin-top:3px}
+  .mota{font-size:13px;margin-top:4px}
+  .who{font-size:12px;color:var(--pri);font-weight:600;margin-top:4px}
+  .empty{text-align:center;color:var(--mute);padding:30px 10px}
+  .foot{text-align:center;color:var(--mute);font-size:12px;margin-top:16px}
+  /* ---------- loading & modal ---------- */
+  #loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:20;color:var(--mute);font-size:14px}
+  .spin{width:34px;height:34px;border:3px solid #d5dde8;border-top-color:var(--pri);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:10px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .modal{position:fixed;inset:0;background:rgba(10,20,35,.45);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+  .sheet{background:#fff;width:100%;max-width:420px;border-radius:16px 16px 0 0;padding:20px 18px 26px}
+  @media(min-width:600px){.modal{align-items:center}.sheet{border-radius:16px}}
+  .sheet h3{margin:0 0 4px}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div id="loadTxt">Đang tải...</div></div>
+
+<!-- ============ ĐĂNG NHẬP ============ -->
+<div id="login" class="hide">
+  <div class="lbox">
+    <div class="logo">KT</div>
+    <h2>CBKT App</h2>
+    <div class="muted">Vụ việc &amp; BB · ATM Khu vực Nam</div>
+    <form id="fLogin" onsubmit="return dangNhap(event)">
+      <label for="u">Tên đăng nhập</label>
+      <input class="inp" id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="vd: trungnva">
+      <label for="p">Mật khẩu</label>
+      <div class="pw"><input class="inp" id="p" type="password" autocomplete="current-password" placeholder="Mật khẩu">
+        <button type="button" onclick="hienMK('p',this)">Hiện</button></div>
+      <button class="btn" id="bLogin" type="submit">Đăng nhập</button>
+    </form>
+    <div class="msg" id="mLogin"></div>
+    <button class="link" onclick="moQuen()">Quên mật khẩu?</button>
+    <div id="caiApp" class="hide" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;text-align:center">
+      <button class="btn btn2" id="bCai" style="margin-top:0" onclick="caiApp()">📲 Cài CBKT App vào điện thoại</button>
+      <div class="meta" id="huongDanIOS"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <header>
+    <div class="hrow">
+      <div><h1 id="ten"></h1><div class="sub" id="sub"></div></div>
+      <div style="display:flex;gap:6px">
+        <button class="ibtn" onclick="taiLai()">↻</button>
+        <button class="ibtn" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+    <div class="menu hide" id="menu">
+      <button onclick="moDoiMK()">Đổi mật khẩu</button>
+      <button onclick="dangXuat()">Đăng xuất</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="banner hide" id="bnDoiMK"><span>Bạn đang dùng mật khẩu được cấp. Nên đổi sang mật khẩu của riêng bạn.</span><button onclick="moDoiMK()">Đổi ngay</button></div>
+    <div class="kpi">
+      <div class="k" id="kTon" onclick="chon('TON','')"><b>0</b><span>Vụ chưa xử lý</span></div>
+      <div class="k red" id="kTre" onclick="chon('BB','tre')"><b>0</b><span>BB trễ hạn</span></div>
+      <div class="k amb" id="kSap" onclick="chon('BB','sap')"><b>0</b><span>BB sắp trễ</span></div>
+    </div>
+    <div class="tabs">
+      <button class="tab" id="tTON" onclick="chon('TON','')">Chưa xử lý</button>
+      <button class="tab" id="tBB" onclick="chon('BB','')">BB chưa thu hồi</button>
+    </div>
+    <div class="tools">
+      <input id="q" placeholder="Tìm ticket, ATM ID, hợp đồng..." oninput="ve()">
+      <select id="fNhom" onchange="doiNhom()" class="hide"></select>
+      <select id="fCbkt" onchange="ve()" class="hide"></select>
+    </div>
+    <div id="list"></div>
+    <div class="foot" id="foot"></div>
+  </div>
+</div>
+
+<!-- ============ ĐỔI MẬT KHẨU ============ -->
+<div class="modal hide" id="mdDoi">
+  <div class="sheet">
+    <h3>Đổi mật khẩu</h3>
+    <label>Mật khẩu hiện tại</label><input class="inp" id="mk0" type="password" autocomplete="current-password">
+    <label>Mật khẩu mới (tối thiểu 6 ký tự)</label><input class="inp" id="mk1" type="password" autocomplete="new-password">
+    <label>Nhập lại mật khẩu mới</label><input class="inp" id="mk2" type="password" autocomplete="new-password">
+    <div class="msg" id="mDoi"></div>
+    <button class="btn" id="bDoi" onclick="doiMK()">Lưu mật khẩu mới</button>
+    <button class="btn btn2" onclick="dong('mdDoi')">Đóng</button>
+  </div>
+</div>
+
+<!-- ============ QUÊN MẬT KHẨU ============ -->
+<div class="modal hide" id="mdQuen">
+  <div class="sheet">
+    <h3>Quên mật khẩu</h3>
+    <div class="meta">Nhập tên đăng nhập, hệ thống gửi mật khẩu mới về email công ty của bạn.</div>
+    <label>Tên đăng nhập</label><input class="inp" id="uq" autocapitalize="none" autocorrect="off" placeholder="vd: trungnva">
+    <div class="msg" id="mQuen"></div>
+    <button class="btn" id="bQuen" onclick="quenMK()">Gửi mật khẩu mới</button>
+    <button class="btn btn2" onclick="dong('mdQuen')">Đóng</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uniq = a => [...new Set(a.filter(Boolean))].sort((x, y) => x.localeCompare(y, 'vi'));
+const KEY = 'cbkt_token', KEY_U = 'cbkt_user';
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  del: k => { try { localStorage.removeItem(k); } catch (e) {} }
+};
+let TOKEN = store.get(KEY), DATA = null, tab = 'TON', loc = '', vt = 'CBKT', pv = [];
+
+function show(id) { ['loading', 'login', 'app'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
+function msg(id, text, ok) { const m = $(id); m.textContent = text || ''; m.className = 'msg' + (text ? (ok ? ' ok' : ' err') : ''); }
+function dong(id) { $(id).classList.add('hide'); }
+function hienMK(id, b) { const i = $(id); i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'Hiện' : 'Ẩn'; }
+function goi(fn, args, ok, fail) {
+  const f = fail || loiMang;
+  if (window.google && google.script && google.script.run) {      // chạy trong Apps Script
+    google.script.run.withSuccessHandler(ok).withFailureHandler(f)[fn].apply(null, args);
+    return;
+  }
+  fetch(window.API_URL, {                                            // chạy dạng app PWA
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: fn, args: args })
+  }).then(r => r.json()).then(ok).catch(f);
+}
+function loiMang(e) { show(TOKEN ? 'app' : 'login'); alert('Không kết nối được máy chủ, thử lại sau.\n' + (e && e.message || '')); }
+
+/* ---------- khởi động ---------- */
+function batDau() {
+  if (!TOKEN) { moLogin(); return; }
+  $('loadTxt').textContent = 'Đang tải dữ liệu...';
+  show('loading');
+  goi('layDuLieu', [TOKEN], nhanDuLieu, () => moLogin('Không kết nối được máy chủ, vui lòng đăng nhập lại.'));
+}
+function moLogin(thongBao) {
+  show('login');
+  $('u').value = store.get(KEY_U) || '';
+  msg('mLogin', thongBao || '');
+  setTimeout(() => ($('u').value ? $('p') : $('u')).focus(), 50);
+}
+
+/* ---------- đăng nhập ---------- */
+function dangNhap(ev) {
+  ev.preventDefault();
+  const u = $('u').value.trim(), p = $('p').value;
+  if (!u || !p) { msg('mLogin', 'Nhập tên đăng nhập và mật khẩu'); return false; }
+  $('bLogin').disabled = true; $('bLogin').textContent = 'Đang đăng nhập...'; msg('mLogin', '');
+  goi('dangNhap', [u, p], r => {
+    $('bLogin').disabled = false; $('bLogin').textContent = 'Đăng nhập';
+    if (!r.ok) { msg('mLogin', r.loi); return; }
+    TOKEN = r.token; store.set(KEY, TOKEN); store.set(KEY_U, u.toLowerCase());
+    $('p').value = '';
+    batDau();
+  }, e => { $('bLogin').disabled = false; $('bLogin').textContent = 'Đăng nhập'; msg('mLogin', 'Lỗi kết nối: ' + (e.message || e)); });
+  return false;
+}
+function dangXuat() {
+  toggleMenu(true);
+  const t = TOKEN; TOKEN = null; store.del(KEY); DATA = null;
+  goi('dangXuat', [t], () => {}, () => {});
+  moLogin('Đã đăng xuất.');
+}
+
+/* ---------- quên / đổi mật khẩu ---------- */
+function moQuen() { $('uq').value = $('u').value; msg('mQuen', ''); $('mdQuen').classList.remove('hide'); }
+function quenMK() {
+  const u = $('uq').value.trim();
+  if (!u) { msg('mQuen', 'Nhập tên đăng nhập'); return; }
+  $('bQuen').disabled = true;
+  goi('quenMatKhau', [u], r => { $('bQuen').disabled = false; msg('mQuen', r.tb, true); },
+    e => { $('bQuen').disabled = false; msg('mQuen', 'Lỗi kết nối, thử lại sau'); });
+}
+function moDoiMK() { toggleMenu(true); ['mk0', 'mk1', 'mk2'].forEach(i => $(i).value = ''); msg('mDoi', ''); $('mdDoi').classList.remove('hide'); }
+function doiMK() {
+  const a = $('mk0').value, b = $('mk1').value, c = $('mk2').value;
+  if (!a || !b) { msg('mDoi', 'Nhập đủ mật khẩu hiện tại và mật khẩu mới'); return; }
+  if (b !== c) { msg('mDoi', 'Hai lần nhập mật khẩu mới không khớp'); return; }
+  $('bDoi').disabled = true;
+  goi('doiMatKhau', [TOKEN, a, b], r => {
+    $('bDoi').disabled = false;
+    if (r.hetPhien) { dong('mdDoi'); moLogin('Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.'); return; }
+    if (!r.ok) { msg('mDoi', r.loi); return; }
+    msg('mDoi', 'Đã đổi mật khẩu thành công.', true);
+    $('bnDoiMK').classList.add('hide');
+    setTimeout(() => dong('mdDoi'), 1200);
+  }, () => { $('bDoi').disabled = false; msg('mDoi', 'Lỗi kết nối, thử lại sau'); });
+}
+function toggleMenu(dongLai) { if (dongLai === true) $('menu').classList.add('hide'); else $('menu').classList.toggle('hide'); }
+document.addEventListener('click', e => { if (!e.target.closest('.menu') && !e.target.closest('.ibtn')) $('menu').classList.add('hide'); });
+
+/* ---------- dữ liệu ---------- */
+function taiLai() { batDau(); }
+function nhanDuLieu(d) {
+  if (!d || d.hetPhien) { TOKEN = null; store.del(KEY); moLogin('Phiên đăng nhập hết hạn, vui lòng đăng nhập lại.'); return; }
+  DATA = d; vt = d.user.vaiTro; pv = d.user.phamVi || [d.user.nhom];
+  $('ten').textContent = d.user.ten;
+  $('sub').textContent = vt === 'ADMIN' ? 'Toàn khu vực Nam' : (vt === 'TRUONG_NHOM' ? 'Phụ trách: ' + pv.join(', ') : d.user.nhom);
+  $('foot').textContent = 'Dữ liệu cập nhật: ' + (d.capNhatLuc || 'chưa rõ') + ' · BB trễ khi quá ' + d.han + ' ngày kể từ Resolved';
+  $('bnDoiMK').classList.toggle('hide', !d.canDoiMK);
+  const nhieuNhom = vt === 'ADMIN' || pv.length > 1;
+  $('fNhom').classList.toggle('hide', !nhieuNhom);
+  $('fCbkt').classList.toggle('hide', vt === 'CBKT');
+  if (nhieuNhom) {
+    const cu = $('fNhom').value;
+    $('fNhom').innerHTML = '<option value="">Tất cả nhóm/VP</option>' + uniq(d.items.map(x => x.nhom)).map(n => '<option>' + esc(n) + '</option>').join('');
+    $('fNhom').value = cu;
+  }
+  show('app');
+  doiNhom();
+}
+function doiNhom() {
+  if (!DATA) return;
+  const n = $('fNhom').value, cu = $('fCbkt').value;
+  const ds = uniq(DATA.items.filter(x => !n || x.nhom === n).map(x => x.cbkt));
+  $('fCbkt').innerHTML = '<option value="">Tất cả CBKT</option>' + ds.map(c => '<option>' + esc(c) + '</option>').join('');
+  if (ds.indexOf(cu) >= 0) $('fCbkt').value = cu;
+  ve();
+}
+function chon(t, l) { tab = t; loc = l; ve(); }
+function ve() {
+  if (!DATA) return;
+  const n = $('fNhom').value, c = $('fCbkt').value, q = $('q').value.trim().toLowerCase();
+  const base = DATA.items.filter(x => (!n || x.nhom === n) && (!c || x.cbkt === c));
+  const bb = base.filter(x => x.loai === 'BB'), ton = base.filter(x => x.loai === 'TON');
+  $('kTon').querySelector('b').textContent = ton.length;
+  $('kTre').querySelector('b').textContent = bb.filter(x => x.tre).length;
+  $('kSap').querySelector('b').textContent = bb.filter(x => x.sapTre).length;
+  $('tTON').textContent = 'Chưa xử lý (' + ton.length + ')';
+  $('tBB').textContent = 'BB chưa thu hồi (' + bb.length + ')';
+  $('tTON').classList.toggle('on', tab === 'TON');
+  $('tBB').classList.toggle('on', tab === 'BB');
+  $('kTon').classList.toggle('on', tab === 'TON');
+  $('kTre').classList.toggle('on', tab === 'BB' && loc === 'tre');
+  $('kSap').classList.toggle('on', tab === 'BB' && loc === 'sap');
+
+  let ds = tab === 'TON' ? ton : bb;
+  if (loc === 'tre') ds = ds.filter(x => x.tre);
+  if (loc === 'sap') ds = ds.filter(x => x.sapTre);
+  if (q) ds = ds.filter(x => [x.ticket, x.atmId, x.nganHang, x.diaChi, x.moTa, x.cbkt].join(' ').toLowerCase().includes(q));
+
+  if (!ds.length) { $('list').innerHTML = '<div class="empty">Không có vụ việc nào 👍</div>'; return; }
+  const hienTen = vt !== 'CBKT', hienNhom = vt === 'ADMIN' || pv.length > 1;
+  $('list').innerHTML = ds.map(x => {
+    const cls = x.tre ? 'tre' : (x.sapTre ? 'sap' : '');
+    const nhan = x.soNgay == null ? '' : (x.loai === 'BB'
+      ? (x.tre ? 'Trễ ' + (x.soNgay - DATA.han) + ' ngày' : x.soNgay + ' ngày')
+      : 'Tồn ' + x.soNgay + ' ngày');
+    return '<div class="item ' + cls + '">' +
+      '<div class="row1"><div class="tk">' + esc(x.ticket) + '</div>' + (nhan ? '<span class="badge">' + nhan + '</span>' : '') + '</div>' +
+      '<div class="meta">' + [x.nganHang, x.atmId ? 'ATM ' + x.atmId : ''].filter(Boolean).map(esc).join(' · ') + '</div>' +
+      (x.diaChi ? '<div class="meta">' + esc(x.diaChi) + '</div>' : '') +
+      (x.moTa ? '<div class="mota">' + esc(x.moTa) + '</div>' : '') +
+      '<div class="meta">' + (x.loai === 'BB' ? 'Resolved: ' : 'Tạo: ') + esc(x.ngayHienThi) + (x.trangThai ? ' · ' + esc(x.trangThai) : '') + '</div>' +
+      (hienTen ? '<div class="who">' + esc(x.cbkt) + (hienNhom ? ' · ' + esc(x.nhom) : '') + '</div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+/* ---------- cài app (chỉ khi chạy dạng PWA) ---------- */
+let suKienCai = null;
+const daCai = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); suKienCai = e; if (!daCai) $('caiApp').classList.remove('hide'); });
+if (window.API_URL && !daCai && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+  $('caiApp').classList.remove('hide'); $('bCai').classList.add('hide');
+  $('huongDanIOS').textContent = 'Cài vào iPhone: bấm nút Chia sẻ (ô vuông có mũi tên) ở Safari, chọn "Thêm vào MH chính".';
+}
+function caiApp() {
+  if (!suKienCai) return;
+  suKienCai.prompt();
+  suKienCai.userChoice.then(() => { suKienCai = null; $('caiApp').classList.add('hide'); });
+}
+if (window.API_URL && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+batDau();
+</script>
+</body>
+</html>
